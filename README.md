@@ -1,2 +1,2 @@
 # synth_911data_gen
- Synthetic 911 Call Data Generator
+ Synthetic Data Generator for 911 call center data
