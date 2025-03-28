@@ -22,5 +22,6 @@ faker_911_problems is a work in progress. I am creating a dynamic provider for t
 7. add additional elapsed time breakpoints as needed
 8. create additional parameter hooks for running the code to give additional customization options.
 9. see if faker.bothify can generate id numbers using the pattern '24-######')
+10. determine if I can switch from np.random_gaussian or np.random_exponential to a Poisson distribution of values. 
 
 If anyone has additional suggestions or ideas, email me at [Dr. D](mailto:drddatascience@gmail.com)
