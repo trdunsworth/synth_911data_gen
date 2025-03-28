@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
+import os
 
 def generate_synthetic_data(num_rows, start_date=None):
+    
     """
     Generate synthetic data with controlled distributions
     
@@ -44,24 +46,27 @@ def generate_synthetic_data(num_rows, start_date=None):
     
     # Create DataFrame
     df = pd.DataFrame({
+        
+        # Generate the date fields.
         'Date': dates,
         
-        # Example integer columns with different distributions
-        'IntColumn1': generate_normal_int_column(mean=50, std=10, min_val=0, max_val=100),
-        'IntColumn2': generate_normal_int_column(mean=75, std=15, min_val=25, max_val=125),
+        # Generate the call volume counts,
+        'Recd_911': generate_normal_int_column(mean=380, std=70, min_val=250, max_val=500),
+        'Ab_9111': generate_normal_int_column(mean=50, std=13, min_val=25, max_val=85),
+        'Recd_Admin': generate_normal_int_column(mean=600, std=82, min_val=450, max_val=900),
+        'Ab_Admin': generate_normal_int_column(mean=10, std=5, min_val=0, max_val=25),
+        'Outbound': generate_normal_int_column(mean=375, std=70, min_val=250, max_val=500),
+        'pct_15': generate_float_column(0.8200, 1.0000)
         
-        # Example float columns within specified range
-        'FloatColumn1': generate_float_column(0.8200, 1.0000),
-        'FloatColumn2': generate_float_column(0.8200, 1.0000)
     })
     
+    df['pct_20'] = df.apply(lambda row: 1.0000 if row['pct_15']== 1.0000
+                            else np.round(np.random.uniform(row['pct_15'] + 0.0001, 1.0000), 4), axis=1)
+    
+    output_path = './911_volume_data.csv'
+    df.to_csv(output_path, index=False)
+        
     return df
 
-# Example usage
-num_rows = 100
-synthetic_data = generate_synthetic_data(num_rows)
-
-# Display first few rows and basic statistics
-print(synthetic_data.head())
-print("\nColumn Statistics:")
-print(synthetic_data.describe())
+df = generate_synthetic_data(num_rows=366, start_date=datetime(2024, 1, 1))
+print("Synthetic data generated and saved to 911_volume_data.csv")
