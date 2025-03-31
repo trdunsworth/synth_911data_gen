@@ -138,6 +138,11 @@ def generate_911_data(num_records=10000):
     shape, scale = 2.5, 60.0
     df_full['phone_time'] = np.random.gamma(shape, scale, size=len(df_full)).astype(int)
     df_full['phone_time'] = df_full['phone_time'].clip(lower=45, upper=600)
+
+    # ack_time describes the time from the first dispatch to the time the unit marks enroute
+    shape, scale = 2.0, 30.0
+    df_full['ack_time'] = np.random.gamma(shape, scale, size=len(df_full)).astype(int)
+    df_full['ack_time'] = df_full['ack_time'].clip(lower=2, upper=40)
     
     # More varied enroute_time using gamma with different parameters
     shape, scale = 6.0, 70.0
@@ -152,7 +157,7 @@ def generate_911_data(num_records=10000):
     # Add process_time column - sum of queue_time and dispatch_time
     df_full['process_time'] = df_full['queue_time'] + df_full['dispatch_time']
     
-    df_full['total_time'] = df_full['queue_time'] + df_full['dispatch_time'] + df_full['enroute_time'] + df_full['on_scene_time']
+    df_full['total_time'] = df_full['queue_time'] + df_full['dispatch_time'] + df_full['ack_time'] + df_full['enroute_time'] + df_full['on_scene_time']
 
     return df_full, call_taker_names, dispatcher_names
 
