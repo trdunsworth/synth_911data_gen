@@ -35,7 +35,8 @@ def generate_911_data(num_records=10000):
     dispatcher_names = {key: generate_names() for key in ['A', 'B', 'C', 'D']}
 
     # Generate call_id column
-    call_ids_full = [fake.uuid4() for _ in range(1, num_records + 1)]
+    # TODO: See if I can tie the call_ids_full to the agency type
+    call_ids_full = [fake.bothify(text='25-######') for _ in range(1, num_records + 1)]
     
     # Generate datetime column with random dates across 2024-2025
     start_date = datetime(2024, 1, 1)
