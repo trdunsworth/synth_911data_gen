@@ -7,7 +7,7 @@ from faker import Faker
 from faker.providers import DynamicProvider
 import argparse
 
-fake = Faker()
+fake = Faker('en_US')
 
 law_problem_provider = DynamicProvider(
     provider_name="law_problem",

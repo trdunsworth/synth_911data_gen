@@ -15,16 +15,16 @@ faker_911_problems is a work in progress. I am creating a dynamic provider for t
 
 ## TODO
 
-1. finish creating the faker provider and look at submitting a version of it as a contribution to the faker library
-2. add the custom dynamic provider into synth911gen.py
-3. improve the documentation surrounding this project
-4. add code for 10-digit emergency lines into synthvolgen.py *I will leave it commented out at this time*
-5. add code for pct_10 and pct_40 *Leave Commented Out in the base*
-6. tie the priority level to the problem nature and remove the random generator for priority
-7. add additional elapsed time breakpoints as needed *2025-03-30: Added ack_time as a breakpoint for the time between first dispatch and first marked enroute*
-8. create additional parameter hooks for running the code to give additional customization options.
-9. see if faker.bothify can generate id numbers using the pattern '24-######')
-10. determine if I can switch from np.random_gaussian or np.random_exponential to a Poisson distribution of values.
-11. Create and add a GUI interface for easier data generation.
+-[ ] finish creating the faker provider and look at submitting a version of it as a contribution to the faker library
+-[ ] add the custom dynamic provider into synth911gen.py
+-[ ] improve the documentation surrounding this project
+-[ ] add code for 10-digit emergency lines into synthvolgen.py *I will leave it commented out at this time*
+-[ ] add code for pct_10 and pct_40 *Leave Commented Out in the base*
+-[ ] tie the priority level to the problem nature and remove the random generator for priority
+-[ ] add additional elapsed time breakpoints as needed *2025-03-30: Added ack_time as a breakpoint for the time between first dispatch and first marked enroute*
+-[ ] create additional parameter hooks for running the code to give additional customization options.
+-[X]. see if faker.bothify can generate id numbers using the pattern '24-######') *Completed: 202504022*
+-[ ] determine if I can switch from np.random_gaussian or np.random_exponential to a Poisson distribution of values.
+-[ ] Create and add a GUI interface for easier data generation.
 
 If anyone has additional suggestions or ideas, email me at [Dr. D](mailto:drddatascience@gmail.com)
