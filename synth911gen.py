@@ -24,6 +24,8 @@ ems_problem_provider = DynamicProvider(
     elements=['ALS EMERGENCY', 'BLS EMERGENCY', 'TROUBLE BREATHING ALS', 'FALL BLS', 'PUBLIC SERICE EMS', 'CHEST PAIN ALS', 'CARDIAC ARREST ALS', 'ALTERED LOC ALS', 'UNCONSCIOUS ALS', 'HEART PROBLEMS ALS', 'SEIZURE ALS', 'STROKE ALS', 'INJURED PERSON BLS', 'BACK PAIN BLS', 'MENTAL HEALTH ALS', 'ASSAULT ALS', 'DIABETIC EMERGENCY ALS', 'OVERDOSE ALS', 'HEADACHE BLS', 'ALLERGIC REACTION ALS', 'PSYCHIATRIC EMERGENCY ALS']
 )
 
+# TODO: Add a provider for addresses that allows for repetition of some addresses 
+
 def generate_911_data(num_records=10000):
     
     def generate_names(num_names=8):
