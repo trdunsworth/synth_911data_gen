@@ -24,7 +24,13 @@ ems_problem_provider = DynamicProvider(
     elements=['ALS EMERGENCY', 'BLS EMERGENCY', 'TROUBLE BREATHING ALS', 'FALL BLS', 'PUBLIC SERICE EMS', 'CHEST PAIN ALS', 'CARDIAC ARREST ALS', 'ALTERED LOC ALS', 'UNCONSCIOUS ALS', 'HEART PROBLEMS ALS', 'SEIZURE ALS', 'STROKE ALS', 'INJURED PERSON BLS', 'BACK PAIN BLS', 'MENTAL HEALTH ALS', 'ASSAULT ALS', 'DIABETIC EMERGENCY ALS', 'OVERDOSE ALS', 'HEADACHE BLS', 'ALLERGIC REACTION ALS', 'PSYCHIATRIC EMERGENCY ALS']
 )
 
-# TODO: Add a provider for addresses that allows for repetition of some addresses 
+address_list = [fake.unique.street_address() for _ in range(2500)]
+
+
+street_address_provider = DynamicProvider(
+    provider_name="street_address",
+    elements=address_list
+)
 
 def generate_911_data(num_records=10000):
     
@@ -138,6 +144,9 @@ def generate_911_data(num_records=10000):
     df_full['problem'] = df_full['agency'].apply(assign_problem)
     
     # Add address column with a street address 
+    
+    fake.add_provider(street_address_provider)
+    
     df_full['address'] = [fake.street_address() for _ in range(len(df_full))]
 
     # Add priority_number column with random integers between 1 and 5
@@ -165,6 +174,8 @@ def generate_911_data(num_records=10000):
 
     # Apply the function to create the dispatcher column
     df_full['dispatcher'] = df_full['shift'].apply(assign_dispatcher)
+    
+#TODO: Add columns with datetime stamps for each of the fields that are elapsed time based e.g Time_Call_Queued = event_time + queue_time
     
     # Generate columns with distributions
     df_full['queue_time'] = np.random.exponential(scale=10, size=len(df_full)).astype(int)
