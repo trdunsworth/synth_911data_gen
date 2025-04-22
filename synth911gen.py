@@ -4,9 +4,25 @@ from datetime import datetime, timedelta
 import random
 import os
 from faker import Faker
+from faker.providers import DynamicProvider
 import argparse
 
 fake = Faker()
+
+law_problem_provider = DynamicProvider(
+    provider_name="law_problem",
+    elements=['TRAFFIC STOP', 'PARKING COMPLAINT', 'DISORDERLY CONDUCT', 'SUSPICIOUS EVENT', 'MVC', 'POLICE INFORMATION', 'ALARM COMMERCIAL', 'DOMESTIC VIOL', 'TRESPASSING', 'ASSIST CITIZEN', 'PUBLIC SERVICE - LAW', 'MENTAL HEALTH', 'NOISE COMPLAINT', 'LARCENY', 'DISABLED MOTORIST', 'ALARM RESIDENTIAL', 'DRUG COMPLAINT', 'FLAG DOWN', 'ASSAULT', 'GLA']
+)
+
+fire_problem_provider = DynamicProvider(
+    provider_name="fire_problem",
+    elements=['FIRE ALARM', 'ELEVATOR', 'MVC AUTO', 'GAS LEAK', 'PUBLIC SERVICE - FIRE', 'OUTSIDE FIRE', 'CO ALARM', 'RESIDENTIAL BUILDING FIRE', 'HIGHRISE BUILDING FIRE', 'COMMERCIAL BUILDING FIRE', 'ODOR OF SMOKE', 'APPLIANCE FIRE', 'LOCKOUT', 'ENTRAPMENT', 'MVC SCHOOL BUS', 'WIRES DOWN', 'HAZMAT', 'MVC MOTORCYCLE']
+)
+
+ems_problem_provider = DynamicProvider(
+    provider_name="ems_problem",
+    elements=['ALS EMERGENCY', 'BLS EMERGENCY', 'TROUBLE BREATHING ALS', 'FALL BLS', 'PUBLIC SERICE EMS', 'CHEST PAIN ALS', 'CARDIAC ARREST ALS', 'ALTERED LOC ALS', 'UNCONSCIOUS ALS', 'HEART PROBLEMS ALS', 'SEIZURE ALS', 'STROKE ALS', 'INJURED PERSON BLS', 'BACK PAIN BLS', 'MENTAL HEALTH ALS', 'ASSAULT ALS', 'DIABETIC EMERGENCY ALS', 'OVERDOSE ALS', 'HEADACHE BLS', 'ALLERGIC REACTION ALS', 'PSYCHIATRIC EMERGENCY ALS']
+)
 
 def generate_911_data(num_records=10000):
     
@@ -99,6 +115,27 @@ def generate_911_data(num_records=10000):
 
     # Generate the agency column with the specified distribution
     df_full['agency'] = np.random.choice(agencies, size=len(df_full), p=probabilities)
+    
+    # Assign problem type based on agency
+    def assign_problem(agency):
+        if agency == 'LAW':
+            return fake.law_problem()
+        elif agency == 'FIRE':
+            return fake.fire_problem()
+        elif agency == 'EMS':
+            return fake.ems_problem()
+        else:
+            return None
+
+    # Register the dynamic providers with Faker
+    fake.add_provider(law_problem_provider)
+    fake.add_provider(fire_problem_provider)
+    fake.add_provider(ems_problem_provider)
+    
+    df_full['problem'] = df_full['agency'].apply(assign_problem)
+    
+    # Add address column with a street address 
+    df_full['address'] = [fake.street_address() for _ in range(len(df_full))]
 
     # Add priority_number column with random integers between 1 and 5
     df_full['priority_number'] = np.random.randint(1, 6, size=len(df_full))
