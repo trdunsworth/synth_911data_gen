@@ -118,7 +118,7 @@ def generate_911_data(num_records=10000):
     ]
 
     # Generate datetime column with random dates across 2024-2025
-    start_date = datetime(2024, 1, 1)
+    start_date = datetime(2024, 1, 1, 0, 0, 0)
     end_date = datetime(2025, 12, 31, 23, 59, 59)
     date_range = int((end_date - start_date).total_seconds())
     random_seconds = np.random.randint(0, date_range, size=num_records)
@@ -263,8 +263,6 @@ def generate_911_data(num_records=10000):
     # Apply the function to create the dispatcher column
     df_full["dispatcher"] = df_full["shift"].apply(assign_dispatcher)
 
-    # TODO: Add columns with datetime stamps for each of the fields that are elapsed time based e.g Time_Call_Queued = event_time + queue_time
-
     mu = 3.5
     sigma = 1.2
 
@@ -353,7 +351,22 @@ def generate_911_data(num_records=10000):
         df_full["total_time"], unit="s"
     )
 
-    return df_full, call_taker_names, dispatcher_names
+    # List all your datetime columns
+    datetime_cols = [
+        "event_time",
+        "time_call_queued",
+        "time_call_dispatched",
+        "time_call_acknowledged",
+        "time_call_disconnected",
+        "time_unit_enroute",
+        "time_call_closed",
+    ]
+
+    # Format each datetime column as 'MMMM-YY-DD HH:mm:ss'
+    for col in datetime_cols:
+        df_full[col] = df_full[col].dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        return df_full, call_taker_names, dispatcher_names
 
 
 def main():
