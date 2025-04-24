@@ -7,7 +7,7 @@ from faker import Faker
 from faker.providers import DynamicProvider
 import argparse
 
-fake = Faker()
+fake = Faker("en_US")
 
 law_problem_provider = DynamicProvider(
     provider_name="law_problem",
@@ -93,10 +93,39 @@ street_address_provider = DynamicProvider(
     provider_name="street_address", elements=address_list
 )
 
+# TODO: Add the ability to set the start date and end dates for the data generation.
+# TODO: Add the ability to switch the faker provider to a different locale.
+# TODO: Add the ability to set the output file name and path for the generated CSV file.
+# TODO: Hook this to a web interface to allow users to generate data on demand.
+
 
 def generate_911_data(num_records=10000):
+    """
+    This function generates synthetic 911 dispatch data for a given number of records. This will output a CSV file with the generated data.
+    The data includes various fields such as call_id, agency, event_time, day_of_year, week_no, hour, day_night, dow, shift, shift_part, problem, address, priority_number, call_taker, call_reception, dispatcher, queue_time, dispatch_time, phone_time, ack_time, enroute_time, on_scene_time, process_time, total_time and time stamps for various events.
+
+    Args:
+        num_records (int, optional): _description_. Defaults to 10000.
+
+        TODO: Add the ability to set the start date and end dates for the data generation.
+        This will allow for more flexibility in generating data for specific time periods.
+
+        TODO: Add the ability to switch the faker provider to a different locale.
+        This will allow for generating data in different languages or formats based on the user's needs.
+    """
+
     def generate_names(num_names=8):
-        return [f"{fake.first_name()} {fake.last_name()}" for _ in range(num_names)]
+        """
+        This function generates a list of random names using the Faker library. The number of names generated is determined by the num_names parameter.
+        The names are generated in the format "Last, First". This function is used to create call_taker and dispatcher names for the generated data and conforms to the most commonly used formats.
+
+        Args:
+            num_names (int, optional): _description_. Defaults to 8.
+
+        Returns:
+            dictionary: This returns a dictionary with keys A, B, C, D and values as lists of names.
+        """
+        return [f"{fake.last_name()}, {fake.first_name()}" for _ in range(num_names)]
 
     call_taker_names = {key: generate_names() for key in ["A", "B", "C", "D"]}
     dispatcher_names = {key: generate_names() for key in ["A", "B", "C", "D"]}
@@ -119,14 +148,12 @@ def generate_911_data(num_records=10000):
 
     # Generate datetime column with random dates across 2024-2025
     start_date = datetime(2024, 1, 1, 0, 0, 0)
-    end_date = datetime(2025, 12, 31, 23, 59, 59)
+    end_date = datetime(2024, 12, 31, 23, 59, 59)
     date_range = int((end_date - start_date).total_seconds())
     random_seconds = np.random.randint(0, date_range, size=num_records)
     datetimes_full = [
         start_date + timedelta(seconds=int(sec)) for sec in sorted(random_seconds)
     ]
-
-    # ...rest of your code...
 
     random_seconds = np.random.randint(0, date_range, size=num_records)
     # Convert numpy integers to Python integers before using in timedelta
@@ -162,6 +189,22 @@ def generate_911_data(num_records=10000):
 
     # Define the function to determine the shift
     def determine_shift(row):
+        """
+        This is a function to determine the shift based on the week number, day_night, and day of the week (dow).
+        The function uses the following logic:
+        - If the week number is even:
+            - DAY on MON, TUE, FRI, SAT -> A
+            - NIGHT on MON, TUE, FRI, SAT -> C
+            - DAY on WED, THU, SUN -> B
+            - NIGHT on WED, THU, SUN -> D
+        - This mirrors an existing shift pattern employed by agencies that use a 12 hour shift schedule.
+
+        Args:
+            row (_type_): _description_
+
+        Returns:
+           string: This returns the shift based on the logic defined above.
+        """
         if row["week_no"] % 2 == 0:
             if row["day_night"] == "DAY" and row["dow"] in ["MON", "TUE", "FRI", "SAT"]:
                 return "A"
@@ -201,6 +244,15 @@ def generate_911_data(num_records=10000):
 
     # Define the function to determine the shift_part
     def determine_shift_part(hour):
+        """
+        This determines how the shift is divided into parts based on the hour of the day. This breaks a 12-hour shift into 3 parts:
+
+        Args:
+            hour (int): This is the hour compoenent of the event_time datetime column.
+
+        Returns:
+            string: A descriptor of the shift part based on the hour.
+        """
         if hour in [6, 7, 8, 9, 18, 19, 20, 21]:
             return "EARLY"
         elif hour in [10, 11, 12, 13, 22, 23, 0, 1]:
@@ -213,6 +265,15 @@ def generate_911_data(num_records=10000):
 
     # Assign problem type based on agency
     def assign_problem(agency):
+        """
+        This function assigns a problem type based on the agency type. It uses the Faker library to generate random problems for each agency.
+
+        Args:
+            agency (string): This is the agency type (LAW, EMS, FIRE).
+
+        Returns:
+            string: A random problem type based on the agency.
+        """
         if agency == "LAW":
             return fake.law_problem()
         elif agency == "FIRE":
@@ -240,6 +301,15 @@ def generate_911_data(num_records=10000):
 
     # Define a function to assign call_taker based on shift
     def assign_call_taker(shift):
+        """
+        This function assigns a call_taker based on the shift. It uses the Faker library to generate random names for each shift.
+
+        Args:
+            shift (string): This is the shift type (A, B, C, D).
+
+        Returns:
+            string: The name of the call_taker based on the shift.
+        """
         return random.choice(call_taker_names[shift])
 
     # Apply the function to create the call_taker column
@@ -258,6 +328,15 @@ def generate_911_data(num_records=10000):
 
     # Define a function to assign dispatcher based on shift
     def assign_dispatcher(shift):
+        """
+        This function assigns a dispatcher based on the shift. It uses the Faker library to generate random names for each shift.
+
+        Args:
+            shift (string): This is the shift type (A, B, C, D).
+
+        Returns:
+            string: The name of the dispatcher based on the shift.
+        """
         return random.choice(dispatcher_names[shift])
 
     # Apply the function to create the dispatcher column
@@ -370,6 +449,10 @@ def generate_911_data(num_records=10000):
 
 
 def main():
+    """
+    This is the main entry point of the script. It sets up the argument parser, generates the 911 dispatch data, and saves it to a CSV file.
+    It also prints a summary of the generated data, including the total number of records and a quick summary of the new columns.
+    """
     # Create argument parser
     parser = argparse.ArgumentParser(description="Generate 911 Dispatch Synthetic Data")
     parser.add_argument(
