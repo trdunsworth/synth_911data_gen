@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -99,7 +101,7 @@ street_address_provider = DynamicProvider(
 # TODO: Hook this to a web interface to allow users to generate data on demand.
 
 
-def generate_911_data(num_records=10000):
+def generate_911_data(num_records=10000, start_date=None, end_date=None):
     """
     This function generates synthetic 911 dispatch data for a given number of records. This will output a CSV file with the generated data.
     The data includes various fields such as call_id, agency, event_time, day_of_year, week_no, hour, day_night, dow, shift, shift_part, problem, address, priority_number, call_taker, call_reception, dispatcher, queue_time, dispatch_time, phone_time, ack_time, enroute_time, on_scene_time, process_time, total_time and time stamps for various events.
@@ -112,6 +114,8 @@ def generate_911_data(num_records=10000):
 
         TODO: Add the ability to switch the faker provider to a different locale.
         This will allow for generating data in different languages or formats based on the user's needs.
+
+        This needs to be run with the following setup: python synth911gen.py -n 10000 -s 2024-01-01 -e 2024-12-31 -o computer_aided_dispatch.csv
     """
 
     def generate_names(num_names=8):
@@ -147,8 +151,17 @@ def generate_911_data(num_records=10000):
     ]
 
     # Generate datetime column with random dates across 2024-2025
-    start_date = datetime(2024, 1, 1, 0, 0, 0)
-    end_date = datetime(2024, 12, 31, 23, 59, 59)
+    # Set default start and end dates if not provided
+    if start_date is None:
+        start_date = "2024-01-01"
+    if end_date is None:
+        end_date = "2024-12-31"
+
+    # Convert start_date and end_date to datetime objects
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+    # Generate random datetimes within the specified range
     date_range = int((end_date - start_date).total_seconds())
     random_seconds = np.random.randint(0, date_range, size=num_records)
     datetimes_full = [
@@ -462,18 +475,42 @@ def main():
         default=10000,
         help="Number of records to generate (default: 10000)",
     )
+    parser.add_argument(
+        "-s",
+        "--start_date",
+        type=str,
+        default="2024-01-01",
+        help="Start date for data generation (default: 2024-01-01)",
+    )
+    parser.add_argument(
+        "-e",
+        "--end_date",
+        type=str,
+        default="2024-12-31",
+        help="End date for data generation (default: 2024-12-31)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output_file",
+        type=str,
+        default="computer_aided_dispatch.csv",
+        help="Output file name (default: computer_aided_dispatch.csv)",
+    )
 
     # Parse arguments
     args = parser.parse_args()
 
     # Generate data
-    df_full, call_taker_names, dispatcher_names = generate_911_data(args.num_records)
+    df_full, call_taker_names, dispatcher_names = generate_911_data(
+        num_records=args.num_records,
+        start_date=args.start_date,
+        end_date=args.end_date,
+        )
 
     # Save the DataFrame to a CSV file
-    csv_path = "./computer_aided_dispatch.csv"
-    df_full.to_csv(csv_path, index=False)
+    df_full.to_csv(args.output_file, index=False)
 
-    print(f"CSV file saved to {csv_path}")
+    print(f"CSV file saved to {args.output_file}")
     print(f"Total records generated: {len(df_full)}")
 
     # Quick summary statistics of the new columns
