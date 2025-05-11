@@ -8,6 +8,7 @@ import os
 from faker import Faker
 from faker.providers import DynamicProvider
 import argparse
+from PyInquirer import prompt, Validator, ValidationError
 
 fake = Faker("en_US")
 
@@ -101,7 +102,7 @@ street_address_provider = DynamicProvider(
 # TODO: Hook this to a web interface to allow users to generate data on demand.
 
 
-def generate_911_data(num_records=10000, start_date=None, end_date=None):
+def generate_911_data(num_records=10000, start_date=None, end_date=None, num_names=8):
     """
     This function generates synthetic 911 dispatch data for a given number of records. This will output a CSV file with the generated data.
     The data includes various fields such as call_id, agency, event_time, day_of_year, week_no, hour, day_night, dow, shift, shift_part, problem, address, priority_number, call_taker, call_reception, dispatcher, queue_time, dispatch_time, phone_time, ack_time, enroute_time, on_scene_time, process_time, total_time and time stamps for various events.
@@ -131,8 +132,8 @@ def generate_911_data(num_records=10000, start_date=None, end_date=None):
         """
         return [f"{fake.last_name()}, {fake.first_name()}" for _ in range(num_names)]
 
-    call_taker_names = {key: generate_names() for key in ["A", "B", "C", "D"]}
-    dispatcher_names = {key: generate_names() for key in ["A", "B", "C", "D"]}
+    call_taker_names = {key: generate_names(num_names) for key in ["A", "B", "C", "D"]}
+    dispatcher_names = {key: generate_names(num_names) for key in ["A", "B", "C", "D"]}
 
     # Define the probabilities for each agency
     probabilities = [0.72, 0.17, 0.11]
@@ -461,56 +462,74 @@ def generate_911_data(num_records=10000, start_date=None, end_date=None):
         return df_full, call_taker_names, dispatcher_names
 
 
+class DateValidator(Validator):
+    def validate(self, document):
+        try:
+            datetime.strptime(document.text, '%Y-%m-%d')
+        except ValueError:
+            raise ValidationError(
+                message='Please enter a valid date in YYYY-MM-DD format',
+                cursor_position=len(document.text)
+            )
+
+
 def main():
     """
-    This is the main entry point of the script. It sets up the argument parser, generates the 911 dispatch data, and saves it to a CSV file.
-    It also prints a summary of the generated data, including the total number of records and a quick summary of the new columns.
+    This is the main entry point of the script. It provides an interactive command line interface
+    to generate 911 dispatch data and saves it to a CSV file.
     """
-    # Create argument parser
-    parser = argparse.ArgumentParser(description="Generate 911 Dispatch Synthetic Data")
-    parser.add_argument(
-        "-n",
-        "--num_records",
-        type=int,
-        default=10000,
-        help="Number of records to generate (default: 10000)",
-    )
-    parser.add_argument(
-        "-s",
-        "--start_date",
-        type=str,
-        default="2024-01-01",
-        help="Start date for data generation (default: 2024-01-01)",
-    )
-    parser.add_argument(
-        "-e",
-        "--end_date",
-        type=str,
-        default="2024-12-31",
-        help="End date for data generation (default: 2024-12-31)",
-    )
-    parser.add_argument(
-        "-o",
-        "--output_file",
-        type=str,
-        default="computer_aided_dispatch.csv",
-        help="Output file name (default: computer_aided_dispatch.csv)",
-    )
+    questions = [
+        {
+            'type': 'input',
+            'name': 'num_records',
+            'message': 'How many records would you like to generate?',
+            'default': '10000',
+            'validate': lambda val: val.isdigit() and int(val) > 0 or 'Please enter a positive number'
+        },
+        {
+            'type': 'input',
+            'name': 'start_date',
+            'message': 'Enter start date (YYYY-MM-DD):',
+            'default': '2024-01-01',
+            'validate': DateValidator
+        },
+        {
+            'type': 'input',
+            'name': 'end_date',
+            'message': 'Enter end date (YYYY-MM-DD):',
+            'default': '2024-12-31',
+            'validate': DateValidator
+        },
+        {
+            'type': 'input',
+            'name': 'num_names',
+            'message': 'How many names would you like to generate per shift?',
+            'default': '8',
+            'validate': lambda val: val.isdigit() and int(val) > 0 or 'Please enter a positive number'
+        },
+        {
+            'type': 'input',
+            'name': 'output_file',
+            'message': 'Enter the output file path:',
+            'default': 'computer_aided_dispatch.csv'
+        }
+    ]
 
-    # Parse arguments
-    args = parser.parse_args()
+    answers = prompt(questions)
 
-    # Generate data
+    # Generate data with specified number of names
     df_full, call_taker_names, dispatcher_names = generate_911_data(
-        num_records=args.num_records,
-        start_date=args.start_date,
-        end_date=args.end_date,
-        )
+        num_records=int(answers['num_records']),
+        start_date=answers['start_date'],
+        end_date=answers['end_date'],
+        num_names=int(answers['num_names'])
+    )
 
     # Save the DataFrame to a CSV file
-    df_full.to_csv(args.output_file, index=False)
+    output_file = answers['output_file']
+    df_full.to_csv(output_file, index=False)
 
-    print(f"CSV file saved to {args.output_file}")
+    print(f"\nCSV file saved to {output_file}")
     print(f"Total records generated: {len(df_full)}")
 
     # Quick summary statistics of the new columns
