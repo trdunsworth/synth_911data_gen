@@ -96,9 +96,7 @@ street_address_provider = DynamicProvider(
     provider_name="street_address", elements=address_list
 )
 
-# TODO: Add the ability to set the start date and end dates for the data generation.
 # TODO: Add the ability to switch the faker provider to a different locale.
-# TODO: Add the ability to set the output file name and path for the generated CSV file.
 # TODO: Hook this to a web interface to allow users to generate data on demand.
 
 
@@ -109,9 +107,6 @@ def generate_911_data(num_records=10000, start_date=None, end_date=None, num_nam
 
     Args:
         num_records (int, optional): _description_. Defaults to 10000.
-
-        TODO: Add the ability to set the start date and end dates for the data generation.
-        This will allow for more flexibility in generating data for specific time periods.
 
         TODO: Add the ability to switch the faker provider to a different locale.
         This will allow for generating data in different languages or formats based on the user's needs.
@@ -370,9 +365,9 @@ def generate_911_data(num_records=10000, start_date=None, end_date=None, num_nam
 
     shape, scale = 3.0, 45.0
     df_full["dispatch_time"] = (
-        np.random.chisquare(df=2, size=len(df_full)) * 2
+        np.random.chisquare(df=5, size=len(df_full)) * 2
     ).astype(int)
-    df_full["dispatch_time"] = df_full["dispatch_time"].clip(lower=10, upper=600)
+    df_full["dispatch_time"] = df_full["dispatch_time"].clip(lower=5, upper=600)
 
     # More varied phone_time using gamma
     df_full["phone_time"] = np.concatenate(
