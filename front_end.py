@@ -1,28 +1,87 @@
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import ttk  # For combobox (dropdown)
+from tkinter import filedialog, messagebox
+from tkinter import ttk
+import threading
+import sys
+import os
+
+# Import the generator modules
+# Ensure the current directory is in the path to import local modules
+sys.path.append(os.getcwd())
+
+try:
+    import opt_synth911gen
+    import synthvolgen
+except ImportError as e:
+    print(f"Error importing modules: {e}")
+    # We will handle this gracefully in the UI if needed, or let it fail if critical
 
 def run_script():
     selected_script = script_var.get()
     output_file = output_file_entry.get()
     
-    # Placeholder for parameter retrieval
-    param1 = param1_entry.get()
-    param2 = param2_entry.get()
+    # Disable run button while running
+    run_button.config(state=tk.DISABLED)
+    status_text.insert(tk.END, f"Starting {selected_script}...\n")
+    status_text.see(tk.END)
 
-    status_text.insert(tk.END, f"Running {selected_script}...\n")
-    status_text.insert(tk.END, f"Output file: {output_file}\n")
-    status_text.insert(tk.END, f"Parameter 1: {param1}, Parameter 2: {param2}\n")
+    # Run in a separate thread to keep UI responsive
+    thread = threading.Thread(target=execute_script, args=(selected_script, output_file))
+    thread.start()
 
-    # Placeholder for actual script execution logic
-    # Replace with your script logic, passing parameters
-    # Example:
-    # if selected_script == "CAD Data Generation":
-    #     generate_cad_data(output_file, param1, param2)
-    # elif selected_script == "Call Volume Generation":
-    #     generate_call_volume(output_file, param1, param2)
+def execute_script(selected_script, output_file):
+    try:
+        if selected_script == "CAD Data Generation":
+            # Retrieve parameters (add validation as needed)
+            # For this demo, we'll use defaults or parse from entries if we added them
+            # The original UI had placeholders param1/param2. 
+            # We should map them to actual arguments if we want to use them.
+            # For now, let's assume standard defaults or minimal args for safety.
+            
+            # Example: mapping param1 to num_records if it's a number
+            try:
+                num_records = int(param1_entry.get())
+            except ValueError:
+                num_records = 1000 # Default
+            
+            status_text.insert(tk.END, f"Generating {num_records} CAD records...\n")
+            
+            # Call the function directly
+            df, _, _ = opt_synth911gen.generate_911_data(num_records=num_records)
+            
+            # Save to the specified output file
+            if not output_file:
+                output_file = "computer_aided_dispatch.csv"
+            
+            df.to_csv(output_file, index=False)
+            status_text.insert(tk.END, f"Saved to {output_file}\n")
 
-    status_text.insert(tk.END, "Script execution complete.\n")
+        elif selected_script == "Call Volume Generation":
+             # Example: mapping param1 to num_rows
+            try:
+                num_rows = int(param1_entry.get())
+            except ValueError:
+                num_rows = 366 # Default
+                
+            status_text.insert(tk.END, f"Generating {num_rows} volume records...\n")
+            
+            # Call the function directly
+            df = synthvolgen.generate_synthetic_data(num_rows=num_rows)
+            
+            if not output_file:
+                output_file = "911_volume_data.csv"
+                
+            df.to_csv(output_file, index=False)
+            status_text.insert(tk.END, f"Saved to {output_file}\n")
+            
+        root.after(0, lambda: status_text.insert(tk.END, "Execution complete.\n"))
+        root.after(0, lambda: messagebox.showinfo("Success", "Data generation complete!"))
+
+    except Exception as e:
+        root.after(0, lambda: status_text.insert(tk.END, f"Error: {str(e)}\n"))
+        root.after(0, lambda: messagebox.showerror("Error", f"An error occurred: {str(e)}"))
+    finally:
+        root.after(0, lambda: run_button.config(state=tk.NORMAL))
 
 def select_output_file():
     filename = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
@@ -54,14 +113,17 @@ output_file_entry.grid(row=1, column=1, sticky="we", padx=5, pady=5)
 output_button = tk.Button(root, text="Browse", command=select_output_file)
 output_button.grid(row=1, column=2, padx=5, pady=5)
 
-# Parameter input (placeholder)
-param1_label = tk.Label(root, text="Parameter 1:")
+# Parameter input
+# Renamed labels to be more descriptive based on usage
+param1_label = tk.Label(root, text="Num Records/Rows:")
 param1_label.grid(row=2, column=0, sticky="w", padx=5, pady=5)
 
 param1_entry = tk.Entry(root, width=20)
 param1_entry.grid(row=2, column=1, sticky="w", padx=5, pady=5)
+param1_entry.insert(0, "1000") # Default value
 
-param2_label = tk.Label(root, text="Parameter 2:")
+# Param 2 is currently unused in this simple implementation but kept for layout
+param2_label = tk.Label(root, text="Parameter 2 (Unused):")
 param2_label.grid(row=3, column=0, sticky="w", padx=5, pady=5)
 
 param2_entry = tk.Entry(root, width=20)
@@ -78,4 +140,5 @@ status_label.grid(row=5, column=0, sticky="w", padx=5, pady=5)
 status_text = tk.Text(root, height=10, width=60)
 status_text.grid(row=6, column=0, columnspan=3, padx=5, pady=5)
 
-root.mainloop()
+if __name__ == "__main__":
+    root.mainloop()

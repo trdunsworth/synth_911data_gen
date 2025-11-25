@@ -9,6 +9,31 @@ from faker import Faker
 from faker.providers import DynamicProvider
 import argparse
 from PyInquirer import prompt, Validator, ValidationError
+import re
+
+def sanitize_input(user_input):
+    # Regular expression to match allowed characters
+    pattern = r'^[a-zA-Z0-9\s\-]+$'
+    if not re.match(pattern, user_input):
+        raise ValueError("Input contains invalid characters. Only letters, numbers, spaces, and hyphens are allowed.")
+    return user_input
+
+def main():
+    parser = argparse.ArgumentParser(description="Sanitize user input options in synth911gen.py")
+    
+    # Example of a command-line argument
+    parser.add_argument('--option', type=str, required=True, help='User input option')
+    
+    args = parser.parse_args()
+    
+    try:
+        sanitized_option = sanitize_input(args.option)
+        print(f"Sanitized Option: {sanitized_option}")
+    except ValueError as e:
+        print(e)
+
+if __name__ == "__main__":
+    main()
 
 fake = Faker("en_US")
 

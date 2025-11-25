@@ -22,7 +22,8 @@ def generate_synthetic_data(num_rows, start_date=None):
     if start_date is None:
         start_date = datetime.now()
     
-    dates = [start_date + timedelta(days=i) for i in range(num_rows)]
+    # Vectorized date generation
+    dates = pd.date_range(start=start_date, periods=num_rows, freq='D')
     
     # Example of generating an integer column with normal distribution
     # Parameters: mean, standard deviation, min, max
@@ -60,8 +61,18 @@ def generate_synthetic_data(num_rows, start_date=None):
         
     })
     
-    df['pct_20'] = df.apply(lambda row: 1.0000 if row['pct_15']== 1.0000
-                            else np.round(np.random.uniform(row['pct_15'] + 0.0001, 1.0000), 4), axis=1)
+    # Vectorized pct_20 calculation
+    # Logic: if pct_15 == 1.0000, then 1.0000
+    # else uniform(pct_15 + 0.0001, 1.0000)
+    
+    # Generate random values for the else case for all rows first
+    random_vals = np.random.uniform(df['pct_15'] + 0.0001, 1.0000)
+    
+    df['pct_20'] = np.where(
+        df['pct_15'] == 1.0000,
+        1.0000,
+        np.round(random_vals, 4)
+    )
     
     output_path = './911_volume_data.csv'
     df.to_csv(output_path, index=False)
